@@ -1,3 +1,57 @@
 spring:
   application:
     name: FitTracker
+
+  # Default profile: H2 in-memory for quick local dev without Docker
+  datasource:
+    url: jdbc:h2:mem:fittracker
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+# CORS: allow React frontend during development
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+
+---
+
+# Docker profile: PostgreSQL
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fittracker
+    driver-class-name: org.postgresql.Driver
+    username: fittracker
+    password: fittracker
+
+  h2:
+    console:
+      enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
