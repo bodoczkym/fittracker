@@ -4,6 +4,7 @@ import com.bodoczky.fittracker.dto.ExerciseLogRequest;
 import com.bodoczky.fittracker.dto.ExerciseLogResponse;
 import com.bodoczky.fittracker.service.WorkoutSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -26,8 +27,7 @@ class ExerciseLogControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @MockitoBean
     private WorkoutSessionService workoutSessionService;

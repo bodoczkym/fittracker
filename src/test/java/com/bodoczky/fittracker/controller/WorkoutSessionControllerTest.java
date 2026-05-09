@@ -7,6 +7,7 @@ import com.bodoczky.fittracker.dto.WorkoutSessionResponse;
 import com.bodoczky.fittracker.exception.ResourceNotFoundException;
 import com.bodoczky.fittracker.service.WorkoutSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,7 @@ class WorkoutSessionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @MockitoBean
     private WorkoutSessionService workoutSessionService;
