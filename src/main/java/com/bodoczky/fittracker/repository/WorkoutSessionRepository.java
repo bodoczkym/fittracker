@@ -10,4 +10,7 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
     List<WorkoutSession> findByWorkoutDayIdOrderByWeekNumber(Long workoutDayId);
 
     List<WorkoutSession> findByWorkoutDay_TrainingCycleIdOrderByDateDesc(Long trainingCycleId);
+
+    List<WorkoutSession> findByWorkoutDay_TrainingCycleIdAndWeekNumberOrderByDateDesc(
+            Long trainingCycleId, Integer weekNumber);
 }
