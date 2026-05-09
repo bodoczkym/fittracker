@@ -1,0 +1,78 @@
+name: Promote develop to main
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag in semver form (e.g. v0.2.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    name: Promote
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate version format
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must match vMAJOR.MINOR.PATCH (got: $VERSION)"
+            exit 1
+          fi
+
+      - name: Checkout main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Refuse if tag already exists
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if git rev-parse "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag $VERSION already exists"
+            exit 1
+          fi
+
+      - name: Fast-forward main to develop
+        run: |
+          git fetch origin develop:develop
+          if ! git merge --ff-only develop; then
+            echo "::error::main cannot be fast-forwarded to develop. Resolve manually (main may have commits develop does not)."
+            exit 1
+          fi
+
+      - name: Tag release
+        env:
+          VERSION: ${{ inputs.version }}
+        run: git tag -a "$VERSION" -m "Release $VERSION"
+
+      - name: Push main and tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git push origin main
+          git push origin "$VERSION"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "$VERSION" \
+            --target main \
+            --title "$VERSION" \
+            --generate-notes
