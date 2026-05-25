@@ -36,7 +36,7 @@ public class TrainingCycleService {
     public TrainingCycleResponse createCycle(TrainingCycleRequest request) {
         TrainingCycle cycle = TrainingCycle.builder()
                 .cycleNumber(request.getCycleNumber())
-                .numberOfWeeks(request.getNumberOfWeeks())
+                .numberOfMicrocycles(request.getNumberOfMicrocycles())
                 .startDate(request.getStartDate())
                 .notes(request.getNotes())
                 .build();
@@ -58,7 +58,7 @@ public class TrainingCycleService {
 
         TrainingCycle newCycle = TrainingCycle.builder()
                 .cycleNumber(previous.getCycleNumber() + 1)
-                .numberOfWeeks(previous.getNumberOfWeeks())
+                .numberOfMicrocycles(previous.getNumberOfMicrocycles())
                 .startDate(startDate)
                 .notes(notes)
                 .build();
@@ -97,7 +97,7 @@ public class TrainingCycleService {
                 .orElseThrow(() -> new ResourceNotFoundException("TrainingCycle", id));
 
         cycle.setCycleNumber(request.getCycleNumber());
-        cycle.setNumberOfWeeks(request.getNumberOfWeeks());
+        cycle.setNumberOfMicrocycles(request.getNumberOfMicrocycles());
         cycle.setStartDate(request.getStartDate());
         cycle.setNotes(request.getNotes());
 
@@ -158,7 +158,7 @@ public class TrainingCycleService {
         return TrainingCycleResponse.builder()
                 .id(cycle.getId())
                 .cycleNumber(cycle.getCycleNumber())
-                .numberOfWeeks(cycle.getNumberOfWeeks())
+                .numberOfMicrocycles(cycle.getNumberOfMicrocycles())
                 .startDate(cycle.getStartDate())
                 .endDate(cycle.getEndDate())
                 .notes(cycle.getNotes())

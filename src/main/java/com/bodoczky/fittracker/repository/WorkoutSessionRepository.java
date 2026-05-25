@@ -7,10 +7,10 @@ import java.util.List;
 
 public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, Long> {
 
-    List<WorkoutSession> findByWorkoutDayIdOrderByWeekNumber(Long workoutDayId);
+    List<WorkoutSession> findByWorkoutDayIdOrderByMicrocycleNumber(Long workoutDayId);
 
     List<WorkoutSession> findByWorkoutDay_TrainingCycleIdOrderByDateDesc(Long trainingCycleId);
 
-    List<WorkoutSession> findByWorkoutDay_TrainingCycleIdAndWeekNumberOrderByDateDesc(
-            Long trainingCycleId, Integer weekNumber);
+    List<WorkoutSession> findByWorkoutDay_TrainingCycleIdAndMicrocycleNumberOrderByDateDesc(
+            Long trainingCycleId, Integer microcycleNumber);
 }

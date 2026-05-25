@@ -27,9 +27,9 @@ public class WorkoutSessionService {
                 .toList();
     }
 
-    public List<WorkoutSessionResponse> getSessionsByCycleAndWeek(Long cycleId, Integer weekNumber) {
+    public List<WorkoutSessionResponse> getSessionsByCycleAndMicrocycle(Long cycleId, Integer microcycleNumber) {
         return workoutSessionRepository
-                .findByWorkoutDay_TrainingCycleIdAndWeekNumberOrderByDateDesc(cycleId, weekNumber)
+                .findByWorkoutDay_TrainingCycleIdAndMicrocycleNumberOrderByDateDesc(cycleId, microcycleNumber)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -48,7 +48,7 @@ public class WorkoutSessionService {
 
         WorkoutSession session = WorkoutSession.builder()
                 .workoutDay(day)
-                .weekNumber(request.getWeekNumber())
+                .microcycleNumber(request.getMicrocycleNumber())
                 .date(request.getDate())
                 .location(request.getLocation())
                 .notes(request.getNotes())
@@ -83,7 +83,7 @@ public class WorkoutSessionService {
             session.setWorkoutDay(day);
         }
 
-        session.setWeekNumber(request.getWeekNumber());
+        session.setMicrocycleNumber(request.getMicrocycleNumber());
         session.setDate(request.getDate());
         session.setLocation(request.getLocation());
         session.setNotes(request.getNotes());
@@ -164,7 +164,7 @@ public class WorkoutSessionService {
         return WorkoutSessionResponse.builder()
                 .id(session.getId())
                 .workoutDayId(session.getWorkoutDay().getId())
-                .weekNumber(session.getWeekNumber())
+                .microcycleNumber(session.getMicrocycleNumber())
                 .date(session.getDate())
                 .location(session.getLocation())
                 .notes(session.getNotes())

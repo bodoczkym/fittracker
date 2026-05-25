@@ -16,9 +16,9 @@ public class WorkoutSessionRequest {
     @NotNull(message = "Workout day ID is required")
     private Long workoutDayId;
 
-    @NotNull(message = "Week number is required")
+    @NotNull(message = "Microcycle number is required")
     @Positive
-    private Integer weekNumber;
+    private Integer microcycleNumber;
 
     @NotNull(message = "Date is required")
     private LocalDate date;

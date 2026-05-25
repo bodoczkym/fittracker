@@ -48,7 +48,7 @@ class TrainingCycleControllerTest {
         sample = TrainingCycleResponse.builder()
                 .id(1L)
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .build();
     }
@@ -84,7 +84,7 @@ class TrainingCycleControllerTest {
     void createCycle_returns201() throws Exception {
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .build();
         when(trainingCycleService.createCycle(any(TrainingCycleRequest.class))).thenReturn(sample);
@@ -128,7 +128,7 @@ class TrainingCycleControllerTest {
     void updateCycle_returns200() throws Exception {
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .build();
         when(trainingCycleService.updateCycle(eq(1L), any(TrainingCycleRequest.class))).thenReturn(sample);
