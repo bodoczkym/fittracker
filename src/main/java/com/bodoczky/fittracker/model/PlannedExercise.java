@@ -38,6 +38,7 @@ public class PlannedExercise {
     @Column(nullable = false)
     private String restPeriod;
 
+    @Column(precision = 5, scale = 2)
     private BigDecimal targetRpe;
 
     @Column(length = 1000)

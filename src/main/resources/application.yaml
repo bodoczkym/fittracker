@@ -2,9 +2,23 @@ spring:
   application:
     name: FitTracker
 
+  # Schema is owned by Liquibase on both profiles (see ADR-0002).
+  # ddl-auto: validate makes the app refuse to start if entities and
+  # the Liquibase-managed schema diverge — catches forgotten changelogs.
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
   # Default profile: H2 in-memory for quick local dev without Docker
   datasource:
-    url: jdbc:h2:mem:fittracker
+    url: jdbc:h2:mem:fittracker;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -13,14 +27,6 @@ spring:
     console:
       enabled: true
       path: /h2-console
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
 
 server:
   port: 8080
@@ -49,8 +55,6 @@ spring:
       enabled: false
 
   jpa:
-    hibernate:
-      ddl-auto: update
     show-sql: false
     properties:
       hibernate:

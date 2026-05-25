@@ -1,0 +1,250 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-exercises
+      author: bodoczkym
+      changes:
+        - createTable:
+            tableName: exercises
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 002-create-training-cycles
+      author: bodoczkym
+      changes:
+        - createTable:
+            tableName: training_cycles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: cycle_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: number_of_microcycles
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: DATE
+              - column:
+                  name: notes
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 003-create-workout-days
+      author: bodoczkym
+      changes:
+        - createTable:
+            tableName: workout_days
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: training_cycle_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workout_days_training_cycle
+                    references: training_cycles(id)
+              - column:
+                  name: day_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: notes
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 004-create-planned-exercises
+      author: bodoczkym
+      changes:
+        - createTable:
+            tableName: planned_exercises
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workout_day_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_planned_exercises_workout_day
+                    references: workout_days(id)
+              - column:
+                  name: exercise_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_planned_exercises_exercise
+                    references: exercises(id)
+              - column:
+                  name: order_index
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sets
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rep_range
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rest_period
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_rpe
+                  type: DECIMAL(5, 2)
+              - column:
+                  name: notes
+                  type: VARCHAR(1000)
+
+  - changeSet:
+      id: 005-create-workout-sessions
+      author: bodoczkym
+      changes:
+        - createTable:
+            tableName: workout_sessions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workout_day_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workout_sessions_workout_day
+                    references: workout_days(id)
+              - column:
+                  name: microcycle_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location
+                  type: VARCHAR(255)
+              - column:
+                  name: notes
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 006-create-exercise-logs
+      author: bodoczkym
+      changes:
+        - createTable:
+            tableName: exercise_logs
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workout_session_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_exercise_logs_workout_session
+                    references: workout_sessions(id)
+              - column:
+                  name: exercise_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_exercise_logs_exercise
+                    references: exercises(id)
+              - column:
+                  name: planned
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_index
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sets
+                  type: INT
+              - column:
+                  name: rep_range
+                  type: VARCHAR(255)
+              - column:
+                  name: rest_period
+                  type: VARCHAR(255)
+              - column:
+                  name: target_rpe
+                  type: DECIMAL(5, 2)
+              - column:
+                  name: actual_performance
+                  type: VARCHAR(500)
+              - column:
+                  name: actual_rpe
+                  type: DECIMAL(5, 2)
+              - column:
+                  name: notes
+                  type: VARCHAR(1000)
