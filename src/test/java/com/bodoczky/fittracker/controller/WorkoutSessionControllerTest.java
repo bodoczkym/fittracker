@@ -4,6 +4,7 @@ import com.bodoczky.fittracker.dto.ExerciseLogRequest;
 import com.bodoczky.fittracker.dto.ExerciseLogResponse;
 import com.bodoczky.fittracker.dto.WorkoutSessionRequest;
 import com.bodoczky.fittracker.dto.WorkoutSessionResponse;
+import com.bodoczky.fittracker.config.SecurityConfig;
 import com.bodoczky.fittracker.exception.ResourceNotFoundException;
 import com.bodoczky.fittracker.service.WorkoutSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,12 +13,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,9 +38,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WorkoutSessionController.class)
+@Import(SecurityConfig.class)
+@WithMockUser
 class WorkoutSessionControllerTest {
 
     @Autowired
+    private WebApplicationContext context;
+
     private MockMvc mockMvc;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -46,6 +57,7 @@ class WorkoutSessionControllerTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = webAppContextSetup(context).apply(springSecurity()).build();
         sessionResponse = WorkoutSessionResponse.builder()
                 .id(50L)
                 .workoutDayId(10L)
