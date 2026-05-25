@@ -227,7 +227,7 @@ class TrainingCycleServiceTest {
 
         assertThatThrownBy(() ->
                 trainingCycleService.copyFromPreviousCycle(LocalDate.now(), "x"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("No previous cycle");
     }
 

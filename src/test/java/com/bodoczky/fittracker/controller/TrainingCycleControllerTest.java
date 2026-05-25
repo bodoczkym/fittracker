@@ -125,6 +125,21 @@ class TrainingCycleControllerTest {
     }
 
     @Test
+    void copyFromPreviousCycle_returns404_whenNoPrevious() throws Exception {
+        CopyCycleRequest req = CopyCycleRequest.builder()
+                .startDate(LocalDate.of(2026, 3, 1))
+                .build();
+        when(trainingCycleService.copyFromPreviousCycle(any(LocalDate.class), any()))
+                .thenThrow(new ResourceNotFoundException("No previous cycle found to copy from"));
+
+        mockMvc.perform(post("/api/v1/cycles/copy")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
     void updateCycle_returns200() throws Exception {
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(1)

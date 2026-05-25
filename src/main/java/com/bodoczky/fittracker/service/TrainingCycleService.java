@@ -54,7 +54,7 @@ public class TrainingCycleService {
     @Transactional
     public TrainingCycleResponse copyFromPreviousCycle(LocalDate startDate, String notes) {
         TrainingCycle previous = trainingCycleRepository.findTopByOrderByCycleNumberDesc()
-                .orElseThrow(() -> new RuntimeException("No previous cycle found to copy"));
+                .orElseThrow(() -> new ResourceNotFoundException("No previous cycle found to copy from"));
 
         TrainingCycle newCycle = TrainingCycle.builder()
                 .cycleNumber(previous.getCycleNumber() + 1)
