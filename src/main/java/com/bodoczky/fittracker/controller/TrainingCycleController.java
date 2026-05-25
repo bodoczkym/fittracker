@@ -24,6 +24,11 @@ public class TrainingCycleController {
         return ResponseEntity.ok(trainingCycleService.getAllCycles());
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<TrainingCycleResponse> getActiveCycle() {
+        return ResponseEntity.ok(trainingCycleService.getActiveCycle());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TrainingCycleResponse> getCycleById(@PathVariable Long id) {
         return ResponseEntity.ok(trainingCycleService.getCycleById(id));
