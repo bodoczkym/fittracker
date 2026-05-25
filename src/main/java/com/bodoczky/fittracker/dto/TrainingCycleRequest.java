@@ -20,7 +20,7 @@ public class TrainingCycleRequest {
     private Integer cycleNumber;
 
     @Builder.Default
-    private Integer numberOfWeeks = 6;
+    private Integer numberOfMicrocycles = 6;
 
     @NotNull(message = "Start date is required")
     private LocalDate startDate;

@@ -14,7 +14,7 @@ public class WorkoutSessionResponse {
 
     private Long id;
     private Long workoutDayId;
-    private Integer weekNumber;
+    private Integer microcycleNumber;
     private LocalDate date;
     private String location;
     private String notes;

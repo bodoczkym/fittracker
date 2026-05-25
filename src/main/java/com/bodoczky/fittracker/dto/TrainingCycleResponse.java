@@ -14,7 +14,7 @@ public class TrainingCycleResponse {
 
     private Long id;
     private Integer cycleNumber;
-    private Integer numberOfWeeks;
+    private Integer numberOfMicrocycles;
     private LocalDate startDate;
     private LocalDate endDate;
     private String notes;

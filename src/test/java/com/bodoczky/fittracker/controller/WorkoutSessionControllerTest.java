@@ -49,7 +49,7 @@ class WorkoutSessionControllerTest {
         sessionResponse = WorkoutSessionResponse.builder()
                 .id(50L)
                 .workoutDayId(10L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.of(2026, 1, 5))
                 .build();
         logResponse = ExerciseLogResponse.builder()
@@ -69,12 +69,12 @@ class WorkoutSessionControllerTest {
     }
 
     @Test
-    void getSessions_byCycleAndWeek() throws Exception {
-        when(workoutSessionService.getSessionsByCycleAndWeek(1L, 2)).thenReturn(List.of(sessionResponse));
+    void getSessions_byCycleAndMicrocycle() throws Exception {
+        when(workoutSessionService.getSessionsByCycleAndMicrocycle(1L, 2)).thenReturn(List.of(sessionResponse));
 
         mockMvc.perform(get("/api/v1/sessions")
                         .param("cycleId", "1")
-                        .param("weekNumber", "2"))
+                        .param("microcycleNumber", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(50));
     }
@@ -100,7 +100,7 @@ class WorkoutSessionControllerTest {
     void createSession_returns201() throws Exception {
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(10L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.of(2026, 1, 5))
                 .build();
         when(workoutSessionService.createSession(any(WorkoutSessionRequest.class))).thenReturn(sessionResponse);
@@ -125,7 +125,7 @@ class WorkoutSessionControllerTest {
     void updateSession_returns200() throws Exception {
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(10L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.of(2026, 1, 5))
                 .build();
         when(workoutSessionService.updateSession(eq(50L), any(WorkoutSessionRequest.class))).thenReturn(sessionResponse);

@@ -23,9 +23,9 @@ public class WorkoutSessionController {
     @GetMapping
     public ResponseEntity<List<WorkoutSessionResponse>> getSessions(
             @RequestParam Long cycleId,
-            @RequestParam(required = false) Integer weekNumber) {
-        if (weekNumber != null) {
-            return ResponseEntity.ok(workoutSessionService.getSessionsByCycleAndWeek(cycleId, weekNumber));
+            @RequestParam(required = false) Integer microcycleNumber) {
+        if (microcycleNumber != null) {
+            return ResponseEntity.ok(workoutSessionService.getSessionsByCycleAndMicrocycle(cycleId, microcycleNumber));
         }
         return ResponseEntity.ok(workoutSessionService.getSessionsByCycle(cycleId));
     }

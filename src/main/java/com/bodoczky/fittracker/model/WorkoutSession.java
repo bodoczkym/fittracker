@@ -25,7 +25,7 @@ public class WorkoutSession {
     private WorkoutDay workoutDay;
 
     @Column(nullable = false)
-    private Integer weekNumber;
+    private Integer microcycleNumber;
 
     @Column(nullable = false)
     private LocalDate date;

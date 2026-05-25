@@ -25,7 +25,7 @@ public class TrainingCycle {
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer numberOfWeeks = 6;
+    private Integer numberOfMicrocycles = 6;
 
     @Column(nullable = false)
     private LocalDate startDate;
