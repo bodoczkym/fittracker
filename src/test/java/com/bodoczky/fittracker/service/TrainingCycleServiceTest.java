@@ -56,7 +56,7 @@ class TrainingCycleServiceTest {
         TrainingCycle cycle = TrainingCycle.builder()
                 .id(1L)
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .build();
         WorkoutDay day = WorkoutDay.builder()
@@ -135,7 +135,7 @@ class TrainingCycleServiceTest {
                 .build();
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .notes("n")
                 .workoutDays(List.of(dayReq))
@@ -159,7 +159,7 @@ class TrainingCycleServiceTest {
 
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(2)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .workoutDays(null)
                 .build();
@@ -188,7 +188,7 @@ class TrainingCycleServiceTest {
                 .build();
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .workoutDays(List.of(dayReq))
                 .build();
@@ -214,7 +214,7 @@ class TrainingCycleServiceTest {
 
         assertThat(result.getId()).isEqualTo(2L);
         assertThat(result.getCycleNumber()).isEqualTo(previous.getCycleNumber() + 1);
-        assertThat(result.getNumberOfWeeks()).isEqualTo(previous.getNumberOfWeeks());
+        assertThat(result.getNumberOfMicrocycles()).isEqualTo(previous.getNumberOfMicrocycles());
         assertThat(result.getStartDate()).isEqualTo(LocalDate.of(2026, 3, 1));
         assertThat(result.getNotes()).isEqualTo("next block");
         assertThat(result.getWorkoutDays()).hasSize(1);
@@ -239,7 +239,7 @@ class TrainingCycleServiceTest {
 
         TrainingCycleRequest req = TrainingCycleRequest.builder()
                 .cycleNumber(2)
-                .numberOfWeeks(8)
+                .numberOfMicrocycles(8)
                 .startDate(LocalDate.of(2026, 2, 1))
                 .notes("updated")
                 .build();
@@ -247,7 +247,7 @@ class TrainingCycleServiceTest {
         TrainingCycleResponse result = trainingCycleService.updateCycle(1L, req);
 
         assertThat(result.getCycleNumber()).isEqualTo(2);
-        assertThat(result.getNumberOfWeeks()).isEqualTo(8);
+        assertThat(result.getNumberOfMicrocycles()).isEqualTo(8);
         assertThat(result.getNotes()).isEqualTo("updated");
     }
 
@@ -258,7 +258,7 @@ class TrainingCycleServiceTest {
         assertThatThrownBy(() ->
                 trainingCycleService.updateCycle(99L, TrainingCycleRequest.builder()
                         .cycleNumber(1)
-                        .numberOfWeeks(6)
+                        .numberOfMicrocycles(6)
                         .startDate(LocalDate.now())
                         .build()))
                 .isInstanceOf(ResourceNotFoundException.class);

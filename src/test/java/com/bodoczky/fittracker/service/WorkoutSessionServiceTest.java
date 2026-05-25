@@ -65,7 +65,7 @@ class WorkoutSessionServiceTest {
         TrainingCycle cycle = TrainingCycle.builder()
                 .id(1L)
                 .cycleNumber(1)
-                .numberOfWeeks(6)
+                .numberOfMicrocycles(6)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .build();
         WorkoutDay day = WorkoutDay.builder()
@@ -92,7 +92,7 @@ class WorkoutSessionServiceTest {
         WorkoutSession session = WorkoutSession.builder()
                 .id(50L)
                 .workoutDay(day)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.of(2026, 1, 5))
                 .build();
         ExerciseLog log = ExerciseLog.builder()
@@ -122,14 +122,14 @@ class WorkoutSessionServiceTest {
     }
 
     @Test
-    void getSessionsByCycleAndWeek_returnsMappedList() {
-        when(workoutSessionRepository.findByWorkoutDay_TrainingCycleIdAndWeekNumberOrderByDateDesc(1L, 2))
+    void getSessionsByCycleAndMicrocycle_returnsMappedList() {
+        when(workoutSessionRepository.findByWorkoutDay_TrainingCycleIdAndMicrocycleNumberOrderByDateDesc(1L, 2))
                 .thenReturn(List.of(sessionWithLog()));
 
-        List<WorkoutSessionResponse> result = workoutSessionService.getSessionsByCycleAndWeek(1L, 2);
+        List<WorkoutSessionResponse> result = workoutSessionService.getSessionsByCycleAndMicrocycle(1L, 2);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getWeekNumber()).isEqualTo(1);
+        assertThat(result.get(0).getMicrocycleNumber()).isEqualTo(1);
     }
 
     @Test
@@ -161,7 +161,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(10L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.of(2026, 1, 5))
                 .location("Home Gym")
                 .notes("good day")
@@ -181,7 +181,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(99L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.now())
                 .build();
 
@@ -199,7 +199,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(10L)
-                .weekNumber(2)
+                .microcycleNumber(2)
                 .date(LocalDate.of(2026, 1, 12))
                 .location("Home")
                 .notes("updated")
@@ -207,7 +207,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionResponse result = workoutSessionService.updateSession(50L, req);
 
-        assertThat(result.getWeekNumber()).isEqualTo(2);
+        assertThat(result.getMicrocycleNumber()).isEqualTo(2);
         assertThat(result.getNotes()).isEqualTo("updated");
         verify(workoutDayRepository, never()).findById(any());
     }
@@ -226,7 +226,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(11L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.now())
                 .build();
 
@@ -241,7 +241,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(10L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.now())
                 .build();
 
@@ -257,7 +257,7 @@ class WorkoutSessionServiceTest {
 
         WorkoutSessionRequest req = WorkoutSessionRequest.builder()
                 .workoutDayId(404L)
-                .weekNumber(1)
+                .microcycleNumber(1)
                 .date(LocalDate.now())
                 .build();
 
