@@ -301,4 +301,55 @@ class TrainingCycleServiceTest {
 
         verify(trainingCycleRepository, never()).deleteById(any());
     }
+
+    @Test
+    void getActiveCycle_returns_whenActiveExists() {
+        when(trainingCycleRepository.findByEndDateIsNull()).thenReturn(Optional.of(cycleWithDayAndExercise()));
+
+        TrainingCycleResponse result = trainingCycleService.getActiveCycle();
+
+        assertThat(result.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void getActiveCycle_throws_whenNoneActive() {
+        when(trainingCycleRepository.findByEndDateIsNull()).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> trainingCycleService.getActiveCycle())
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void createCycle_endsCurrentActiveCycle_beforeCreating() {
+        TrainingCycle active = TrainingCycle.builder()
+                .id(1L)
+                .cycleNumber(1)
+                .numberOfMicrocycles(6)
+                .startDate(LocalDate.of(2026, 1, 1))
+                .build();
+        when(trainingCycleRepository.findByEndDateIsNull()).thenReturn(Optional.of(active));
+        when(trainingCycleRepository.save(any(TrainingCycle.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        trainingCycleService.createCycle(TrainingCycleRequest.builder()
+                .cycleNumber(2)
+                .numberOfMicrocycles(6)
+                .startDate(LocalDate.of(2026, 3, 1))
+                .build());
+
+        assertThat(active.getEndDate()).isEqualTo(LocalDate.now());
+        verify(trainingCycleRepository).save(active);
+    }
+
+    @Test
+    void copyFromPreviousCycle_endsCurrentActiveCycle_beforeCopying() {
+        TrainingCycle active = cycleWithDayAndExercise();
+        when(trainingCycleRepository.findTopByOrderByCycleNumberDesc()).thenReturn(Optional.of(active));
+        when(trainingCycleRepository.findByEndDateIsNull()).thenReturn(Optional.of(active));
+        when(trainingCycleRepository.save(any(TrainingCycle.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        trainingCycleService.copyFromPreviousCycle(LocalDate.of(2026, 3, 1), "next");
+
+        assertThat(active.getEndDate()).isEqualTo(LocalDate.now());
+        verify(trainingCycleRepository).save(active);
+    }
 }

@@ -32,8 +32,16 @@ public class TrainingCycleService {
         return toResponse(cycle);
     }
 
+    public TrainingCycleResponse getActiveCycle() {
+        TrainingCycle active = trainingCycleRepository.findByEndDateIsNull()
+                .orElseThrow(() -> new ResourceNotFoundException("No active training cycle"));
+        return toResponse(active);
+    }
+
     @Transactional
     public TrainingCycleResponse createCycle(TrainingCycleRequest request) {
+        endCurrentActiveCycle();
+
         TrainingCycle cycle = TrainingCycle.builder()
                 .cycleNumber(request.getCycleNumber())
                 .numberOfMicrocycles(request.getNumberOfMicrocycles())
@@ -55,6 +63,8 @@ public class TrainingCycleService {
     public TrainingCycleResponse copyFromPreviousCycle(LocalDate startDate, String notes) {
         TrainingCycle previous = trainingCycleRepository.findTopByOrderByCycleNumberDesc()
                 .orElseThrow(() -> new ResourceNotFoundException("No previous cycle found to copy from"));
+
+        endCurrentActiveCycle();
 
         TrainingCycle newCycle = TrainingCycle.builder()
                 .cycleNumber(previous.getCycleNumber() + 1)
@@ -117,6 +127,18 @@ public class TrainingCycleService {
             throw new ResourceNotFoundException("TrainingCycle", id);
         }
         trainingCycleRepository.deleteById(id);
+    }
+
+    /**
+     * Enforces the one-active-cycle invariant (ADR-0004): ends the currently-active
+     * cycle (if any) by stamping today's end date, so the cycle created next becomes
+     * the sole active one. This intentional side effect on another row is the point.
+     */
+    private void endCurrentActiveCycle() {
+        trainingCycleRepository.findByEndDateIsNull().ifPresent(active -> {
+            active.setEndDate(LocalDate.now());
+            trainingCycleRepository.save(active);
+        });
     }
 
     private WorkoutDay buildWorkoutDay(WorkoutDayRequest request, TrainingCycle cycle) {
