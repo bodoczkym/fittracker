@@ -1,0 +1,10 @@
+# Liquibase master changelog (see ADR-0002).
+#
+# Schema is owned by Liquibase on every profile — H2 dev as well as Postgres
+# docker/prod. The H2 dev profile uses MODE=PostgreSQL so the same changelogs
+# run on both dialects without `dbms` filters.
+#
+# Each new schema change goes in a new numbered file and gets appended below.
+databaseChangeLog:
+  - include:
+      file: db/changelog/001-initial-schema.yaml

@@ -38,11 +38,13 @@ public class ExerciseLog {
 
     private String restPeriod;
 
+    @Column(precision = 5, scale = 2)
     private BigDecimal targetRpe;
 
     @Column(length = 500)
     private String actualPerformance;
 
+    @Column(precision = 5, scale = 2)
     private BigDecimal actualRpe;
 
     @Column(length = 1000)
