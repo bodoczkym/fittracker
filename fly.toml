@@ -1,0 +1,41 @@
+# Fly.io app configuration (issue #17).
+#
+# `fly launch` generates this; the version here is a ready-made starting point.
+# Before the first deploy, set:
+#   - app             → the name you pick during `fly launch`
+#   - primary_region  → your closest region (list them with `fly platform regions`)
+#
+# Datasource and auth credentials are NOT in this file — they are set as secrets
+# (`fly secrets set ...`); see the Deployment section of README.md.
+
+app = "fittracker"
+primary_region = "ams"
+
+[build]
+
+[env]
+  SPRING_PROFILES_ACTIVE = "docker"
+  # Let the JVM use most of the container's memory (it is container-aware).
+  JAVA_TOOL_OPTIONS = "-XX:MaxRAMPercentage=75.0"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Scale to zero when idle to stay within the free allowance; cold start on next request.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # HTTP healthcheck on the Actuator endpoint. grace_period covers JVM + Liquibase startup.
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "60s"
+    method = "GET"
+    path = "/actuator/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # 256mb is tight for a JVM and tends to OOM; 512mb is the safe floor. Drop to 256
+  # only if you also constrain the heap and accept the risk.
+  memory = "512mb"

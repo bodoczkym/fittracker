@@ -31,6 +31,19 @@ spring:
 server:
   port: 8080
 
+# Actuator: expose only the health endpoint. The Fly.io healthcheck (fly.toml) hits
+# /actuator/health, which SecurityConfig permits without auth so the platform probe can
+# reach it. Details are hidden — the probe only needs the UP/DOWN status. Applies to both
+# profiles (the docker profile overrides only datasource keys, not this block).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 # CORS: allow React frontend during development
 app:
   cors:
