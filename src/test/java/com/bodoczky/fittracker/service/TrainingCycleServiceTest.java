@@ -4,6 +4,7 @@ import com.bodoczky.fittracker.dto.PlannedExerciseRequest;
 import com.bodoczky.fittracker.dto.TrainingCycleRequest;
 import com.bodoczky.fittracker.dto.TrainingCycleResponse;
 import com.bodoczky.fittracker.dto.WorkoutDayRequest;
+import com.bodoczky.fittracker.dto.WorkoutDayResponse;
 import com.bodoczky.fittracker.exception.ResourceNotFoundException;
 import com.bodoczky.fittracker.model.Exercise;
 import com.bodoczky.fittracker.model.PlannedExercise;
@@ -262,6 +263,107 @@ class TrainingCycleServiceTest {
                         .startDate(LocalDate.now())
                         .build()))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void updateCycle_withNullWorkoutDays_leavesExistingDaysUntouched() {
+        TrainingCycle cycle = cycleWithDayAndExercise();
+        when(trainingCycleRepository.findById(1L)).thenReturn(Optional.of(cycle));
+        when(trainingCycleRepository.save(any(TrainingCycle.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        TrainingCycleResponse result = trainingCycleService.updateCycle(1L, TrainingCycleRequest.builder()
+                .cycleNumber(1)
+                .numberOfMicrocycles(6)
+                .startDate(LocalDate.of(2026, 1, 1))
+                .notes("metadata only")
+                .workoutDays(null)
+                .build());
+
+        assertThat(result.getWorkoutDays()).hasSize(1);
+        assertThat(result.getWorkoutDays().get(0).getId()).isEqualTo(10L);
+        verify(exerciseRepository, never()).findById(any());
+    }
+
+    @Test
+    void updateCycle_updatesMatchingDayInPlace_byDayNumber() {
+        TrainingCycle cycle = cycleWithDayAndExercise();
+        when(trainingCycleRepository.findById(1L)).thenReturn(Optional.of(cycle));
+        when(exerciseRepository.findById(5L)).thenReturn(Optional.of(exercise(5L)));
+        when(trainingCycleRepository.save(any(TrainingCycle.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PlannedExerciseRequest peReq = PlannedExerciseRequest.builder()
+                .exerciseId(5L)
+                .orderIndex(1)
+                .sets(5)
+                .repRange("3-5")
+                .restPeriod("180s")
+                .build();
+        WorkoutDayRequest dayReq = WorkoutDayRequest.builder()
+                .dayNumber(1)
+                .name("Heavy Push")
+                .plannedExercises(List.of(peReq))
+                .build();
+
+        TrainingCycleResponse result = trainingCycleService.updateCycle(1L, TrainingCycleRequest.builder()
+                .cycleNumber(1)
+                .numberOfMicrocycles(6)
+                .startDate(LocalDate.of(2026, 1, 1))
+                .workoutDays(List.of(dayReq))
+                .build());
+
+        assertThat(result.getWorkoutDays()).hasSize(1);
+        // Same day id (10L) means the row — and any sessions hanging off it — is reused, not recreated.
+        assertThat(result.getWorkoutDays().get(0).getId()).isEqualTo(10L);
+        assertThat(result.getWorkoutDays().get(0).getName()).isEqualTo("Heavy Push");
+        assertThat(result.getWorkoutDays().get(0).getPlannedExercises()).hasSize(1);
+        assertThat(result.getWorkoutDays().get(0).getPlannedExercises().get(0).getSets()).isEqualTo(5);
+    }
+
+    @Test
+    void updateCycle_dropsDayMissingFromRequest() {
+        TrainingCycle cycle = cycleWithDayAndExercise();
+        cycle.getWorkoutDays().add(WorkoutDay.builder()
+                .id(20L)
+                .trainingCycle(cycle)
+                .dayNumber(2)
+                .name("Pull")
+                .build());
+        when(trainingCycleRepository.findById(1L)).thenReturn(Optional.of(cycle));
+        when(trainingCycleRepository.save(any(TrainingCycle.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Request keeps only day 1 (no planned exercises), dropping day 2.
+        WorkoutDayRequest dayReq = WorkoutDayRequest.builder().dayNumber(1).name("Push").build();
+
+        TrainingCycleResponse result = trainingCycleService.updateCycle(1L, TrainingCycleRequest.builder()
+                .cycleNumber(1)
+                .numberOfMicrocycles(6)
+                .startDate(LocalDate.of(2026, 1, 1))
+                .workoutDays(List.of(dayReq))
+                .build());
+
+        assertThat(result.getWorkoutDays()).hasSize(1);
+        assertThat(result.getWorkoutDays().get(0).getDayNumber()).isEqualTo(1);
+    }
+
+    @Test
+    void updateCycle_addsNewDay() {
+        TrainingCycle cycle = cycleWithDayAndExercise();
+        when(trainingCycleRepository.findById(1L)).thenReturn(Optional.of(cycle));
+        when(trainingCycleRepository.save(any(TrainingCycle.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        WorkoutDayRequest day1 = WorkoutDayRequest.builder().dayNumber(1).name("Push").build();
+        WorkoutDayRequest day2 = WorkoutDayRequest.builder().dayNumber(2).name("Pull").build();
+
+        TrainingCycleResponse result = trainingCycleService.updateCycle(1L, TrainingCycleRequest.builder()
+                .cycleNumber(1)
+                .numberOfMicrocycles(6)
+                .startDate(LocalDate.of(2026, 1, 1))
+                .workoutDays(List.of(day1, day2))
+                .build());
+
+        assertThat(result.getWorkoutDays()).hasSize(2);
+        assertThat(result.getWorkoutDays()).extracting(WorkoutDayResponse::getDayNumber)
+                .containsExactlyInAnyOrder(1, 2);
     }
 
     @Test

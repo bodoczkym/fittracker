@@ -11,6 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -111,6 +115,8 @@ public class TrainingCycleService {
         cycle.setStartDate(request.getStartDate());
         cycle.setNotes(request.getNotes());
 
+        mergeWorkoutDays(cycle, request.getWorkoutDays());
+
         return toResponse(trainingCycleRepository.save(cycle));
     }
 
@@ -141,6 +147,58 @@ public class TrainingCycleService {
         });
     }
 
+    /**
+     * Reconciles a cycle's workout days with a full PUT body, matching on {@code dayNumber}
+     * (the natural key within a cycle, since requests carry no day id). Days present in both
+     * are updated in place so their {@link WorkoutSession} rows survive; days dropped from the
+     * request are orphan-removed along with their planned exercises; new day numbers are built
+     * fresh.
+     *
+     * <p>Matching in place — rather than clearing and rebuilding the whole list — is
+     * load-bearing. A recreated day gets a new id, and the cascade from {@link WorkoutDay} to
+     * its sessions would then delete the frozen logs that ADR-0003 promises to preserve.
+     *
+     * <p>A PUT that omits {@code workoutDays} (null) leaves the existing template untouched, so
+     * metadata-only edits don't silently wipe the plan; an explicit empty list clears every day.
+     */
+    private void mergeWorkoutDays(TrainingCycle cycle, List<WorkoutDayRequest> dayRequests) {
+        if (dayRequests == null) {
+            return;
+        }
+
+        Map<Integer, WorkoutDay> existingByDayNumber = cycle.getWorkoutDays().stream()
+                .collect(Collectors.toMap(WorkoutDay::getDayNumber, Function.identity()));
+
+        Set<Integer> requestedDayNumbers = dayRequests.stream()
+                .map(WorkoutDayRequest::getDayNumber)
+                .collect(Collectors.toSet());
+
+        cycle.getWorkoutDays().removeIf(day -> !requestedDayNumbers.contains(day.getDayNumber()));
+
+        for (WorkoutDayRequest dayRequest : dayRequests) {
+            WorkoutDay existing = existingByDayNumber.get(dayRequest.getDayNumber());
+            if (existing != null) {
+                updateWorkoutDay(existing, dayRequest);
+            } else {
+                cycle.getWorkoutDays().add(buildWorkoutDay(dayRequest, cycle));
+            }
+        }
+    }
+
+    private void updateWorkoutDay(WorkoutDay day, WorkoutDayRequest request) {
+        day.setName(request.getName());
+        day.setNotes(request.getNotes());
+
+        // Planned exercises are a pure template with nothing pointing back at them (ADR-0003),
+        // so rebuilding the list wholesale is safe — historical logs are snapshots, not links.
+        day.getPlannedExercises().clear();
+        if (request.getPlannedExercises() != null) {
+            for (PlannedExerciseRequest peRequest : request.getPlannedExercises()) {
+                day.getPlannedExercises().add(buildPlannedExercise(peRequest, day));
+            }
+        }
+    }
+
     private WorkoutDay buildWorkoutDay(WorkoutDayRequest request, TrainingCycle cycle) {
         WorkoutDay day = WorkoutDay.builder()
                 .trainingCycle(cycle)
@@ -151,24 +209,27 @@ public class TrainingCycleService {
 
         if (request.getPlannedExercises() != null) {
             for (PlannedExerciseRequest peRequest : request.getPlannedExercises()) {
-                Exercise exercise = exerciseRepository.findById(peRequest.getExerciseId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Exercise", peRequest.getExerciseId()));
-
-                PlannedExercise plannedExercise = PlannedExercise.builder()
-                        .workoutDay(day)
-                        .exercise(exercise)
-                        .orderIndex(peRequest.getOrderIndex())
-                        .sets(peRequest.getSets())
-                        .repRange(peRequest.getRepRange())
-                        .restPeriod(peRequest.getRestPeriod())
-                        .targetRpe(peRequest.getTargetRpe())
-                        .notes(peRequest.getNotes())
-                        .build();
-                day.getPlannedExercises().add(plannedExercise);
+                day.getPlannedExercises().add(buildPlannedExercise(peRequest, day));
             }
         }
 
         return day;
+    }
+
+    private PlannedExercise buildPlannedExercise(PlannedExerciseRequest request, WorkoutDay day) {
+        Exercise exercise = exerciseRepository.findById(request.getExerciseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Exercise", request.getExerciseId()));
+
+        return PlannedExercise.builder()
+                .workoutDay(day)
+                .exercise(exercise)
+                .orderIndex(request.getOrderIndex())
+                .sets(request.getSets())
+                .repRange(request.getRepRange())
+                .restPeriod(request.getRestPeriod())
+                .targetRpe(request.getTargetRpe())
+                .notes(request.getNotes())
+                .build();
     }
 
     private TrainingCycleResponse toResponse(TrainingCycle cycle) {
