@@ -93,11 +93,20 @@ docker run --rm -p 8080:8080 \
 ```bash
 fly launch --no-deploy        # set `app` + `primary_region` in fly.toml
 fly postgres create           # provision managed Postgres
-fly postgres attach <pg-app>  # wire it to this app
-fly secrets set \
-  SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<db> \
-  SPRING_DATASOURCE_USERNAME=<user> SPRING_DATASOURCE_PASSWORD=<pass> \
-  APP_USERNAME=<you> APP_PASSWORD=<strong-password>
+fly postgres attach <pg-app>  # wire it to this app (sets a DATABASE_URL secret)
+```
+
+`attach` only sets `DATABASE_URL` (in `postgres://user:pass@host:5432/db?sslmode=disable`
+form). Set the `SPRING_DATASOURCE_*` values Spring actually reads from it — keep
+`?sslmode=disable` (the private `.flycast` network is plaintext). Run `secrets set` as a
+**single line** with each value **quoted** (multi-line `\` continuations break on paste in
+some terminals, and an unquoted `?` is glob-expanded by zsh):
+
+```bash
+fly secrets set SPRING_DATASOURCE_URL='jdbc:postgresql://<host>:5432/<db>?sslmode=disable' SPRING_DATASOURCE_USERNAME='<user>' SPRING_DATASOURCE_PASSWORD='<pass>' APP_USERNAME='<you>' APP_PASSWORD='<strong-password>'
+```
+
+```bash
 fly deploy
 ```
 
