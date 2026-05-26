@@ -55,6 +55,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // CORS preflight carries no credentials — let it through.
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Health probe for the host platform — must answer without credentials.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -70,12 +72,17 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /** Docker/Postgres profile: every request requires authentication. */
+    /**
+     * Docker/Postgres profile: every request requires authentication, except the health probe
+     * the host platform (Fly.io) polls without credentials.
+     */
     @Bean
     @Profile("docker")
     public SecurityFilterChain dockerSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .anyRequest().authenticated())
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

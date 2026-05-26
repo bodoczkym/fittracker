@@ -38,4 +38,11 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/api/v1/cycles").with(httpBasic("admin", "admin")))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void healthEndpoint_returns200_withoutCredentials() throws Exception {
+        // The host platform (Fly.io) polls this without auth — it must stay open.
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk());
+    }
 }

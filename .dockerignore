@@ -1,0 +1,23 @@
+# Build output (the image builds the jar itself in the build stage)
+target/
+
+# Git / CI
+.git/
+.github/
+.gitignore
+
+# IDE / editor
+.idea/
+.vscode/
+*.iml
+
+# Local dev / docs not needed in the image
+docker-compose.yml
+README.md
+CONTEXT.md
+docs/
+HELP.md
+
+# Fly metadata
+fly.toml
+.fly/
