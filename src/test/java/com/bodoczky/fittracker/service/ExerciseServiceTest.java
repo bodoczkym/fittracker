@@ -1,10 +1,16 @@
 package com.bodoczky.fittracker.service;
 
+import com.bodoczky.fittracker.dto.ExerciseHistoryEntryResponse;
 import com.bodoczky.fittracker.dto.ExerciseRequest;
 import com.bodoczky.fittracker.dto.ExerciseResponse;
 import com.bodoczky.fittracker.exception.ResourceNotFoundException;
 import com.bodoczky.fittracker.model.Exercise;
+import com.bodoczky.fittracker.model.ExerciseLog;
+import com.bodoczky.fittracker.model.TrainingCycle;
+import com.bodoczky.fittracker.model.WorkoutDay;
+import com.bodoczky.fittracker.model.WorkoutSession;
 import com.bodoczky.fittracker.model.enums.ExerciseCategory;
+import com.bodoczky.fittracker.repository.ExerciseLogRepository;
 import com.bodoczky.fittracker.repository.ExerciseRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +36,9 @@ class ExerciseServiceTest {
 
     @Mock
     private ExerciseRepository exerciseRepository;
+
+    @Mock
+    private ExerciseLogRepository exerciseLogRepository;
 
     @InjectMocks
     private ExerciseService exerciseService;
@@ -152,5 +163,76 @@ class ExerciseServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(exerciseRepository, never()).deleteById(any());
+    }
+
+    private ExerciseLog historyLog(Exercise ex, LocalDate date, int cycleNumber, int microcycle,
+                                   String actualPerformance, BigDecimal actualRpe, String notes) {
+        TrainingCycle cycle = TrainingCycle.builder()
+                .id(7L)
+                .cycleNumber(cycleNumber)
+                .numberOfMicrocycles(6)
+                .startDate(date)
+                .build();
+        WorkoutDay day = WorkoutDay.builder().id(70L).trainingCycle(cycle).dayNumber(1).build();
+        WorkoutSession session = WorkoutSession.builder()
+                .id(700L)
+                .workoutDay(day)
+                .microcycleNumber(microcycle)
+                .date(date)
+                .build();
+        return ExerciseLog.builder()
+                .id(7000L)
+                .workoutSession(session)
+                .exercise(ex)
+                .planned(false)
+                .orderIndex(1)
+                .actualPerformance(actualPerformance)
+                .actualRpe(actualRpe)
+                .notes(notes)
+                .build();
+    }
+
+    @Test
+    void getExerciseHistory_mapsLogToFlattenedEntry() {
+        when(exerciseRepository.existsById(1L)).thenReturn(true);
+        when(exerciseLogRepository.findHistory(1L, null, null)).thenReturn(List.of(
+                historyLog(sampleExercise(), LocalDate.of(2026, 2, 10), 1, 2,
+                        "100kg x5", new BigDecimal("8.5"), "top set")));
+
+        List<ExerciseHistoryEntryResponse> result = exerciseService.getExerciseHistory(1L, null, null);
+
+        assertThat(result).hasSize(1);
+        ExerciseHistoryEntryResponse entry = result.get(0);
+        assertThat(entry.getSessionDate()).isEqualTo(LocalDate.of(2026, 2, 10));
+        assertThat(entry.getTrainingCycleId()).isEqualTo(7L);
+        assertThat(entry.getCycleNumber()).isEqualTo(1);
+        assertThat(entry.getMicrocycleNumber()).isEqualTo(2);
+        assertThat(entry.getActualPerformance()).isEqualTo("100kg x5");
+        assertThat(entry.getActualRpe()).isEqualByComparingTo("8.5");
+        assertThat(entry.getNotes()).isEqualTo("top set");
+    }
+
+    @Test
+    void getExerciseHistory_throws_whenExerciseMissing() {
+        when(exerciseRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> exerciseService.getExerciseHistory(99L, null, null))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Exercise");
+
+        verify(exerciseLogRepository, never()).findHistory(any(), any(), any());
+    }
+
+    @Test
+    void getExerciseHistory_passesDateBounds_andReturnsEmpty_whenNoLogs() {
+        LocalDate from = LocalDate.of(2026, 1, 1);
+        LocalDate to = LocalDate.of(2026, 1, 31);
+        when(exerciseRepository.existsById(1L)).thenReturn(true);
+        when(exerciseLogRepository.findHistory(1L, from, to)).thenReturn(List.of());
+
+        List<ExerciseHistoryEntryResponse> result = exerciseService.getExerciseHistory(1L, from, to);
+
+        assertThat(result).isEmpty();
+        verify(exerciseLogRepository).findHistory(1L, from, to);
     }
 }
