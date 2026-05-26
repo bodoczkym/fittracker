@@ -1,15 +1,18 @@
 package com.bodoczky.fittracker.controller;
 
+import com.bodoczky.fittracker.dto.ExerciseHistoryEntryResponse;
 import com.bodoczky.fittracker.dto.ExerciseRequest;
 import com.bodoczky.fittracker.dto.ExerciseResponse;
 import com.bodoczky.fittracker.model.enums.ExerciseCategory;
 import com.bodoczky.fittracker.service.ExerciseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -33,6 +36,14 @@ public class ExerciseController {
     public ResponseEntity<List<ExerciseResponse>> getExercisesByCategory(
             @PathVariable ExerciseCategory category) {
         return ResponseEntity.ok(exerciseService.getExercisesByCategory(category));
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<ExerciseHistoryEntryResponse>> getExerciseHistory(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(exerciseService.getExerciseHistory(id, from, to));
     }
 
     @PostMapping

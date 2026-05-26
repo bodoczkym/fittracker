@@ -1,5 +1,6 @@
 package com.bodoczky.fittracker.controller;
 
+import com.bodoczky.fittracker.dto.ExerciseHistoryEntryResponse;
 import com.bodoczky.fittracker.dto.ExerciseRequest;
 import com.bodoczky.fittracker.dto.ExerciseResponse;
 import com.bodoczky.fittracker.config.SecurityConfig;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -19,13 +21,17 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -151,5 +157,54 @@ class ExerciseControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(exerciseService).deleteExercise(1L);
+    }
+
+    @Test
+    void getExerciseHistory_returns200_withEntries() throws Exception {
+        ExerciseHistoryEntryResponse entry = ExerciseHistoryEntryResponse.builder()
+                .sessionDate(LocalDate.of(2026, 2, 10))
+                .trainingCycleId(7L)
+                .cycleNumber(1)
+                .microcycleNumber(2)
+                .actualPerformance("100kg x5")
+                .actualRpe(new BigDecimal("8.5"))
+                .notes("top set")
+                .build();
+        when(exerciseService.getExerciseHistory(eq(1L), isNull(), isNull())).thenReturn(List.of(entry));
+
+        mockMvc.perform(get("/api/v1/exercises/1/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sessionDate").value("2026-02-10"))
+                .andExpect(jsonPath("$[0].trainingCycleId").value(7))
+                .andExpect(jsonPath("$[0].cycleNumber").value(1))
+                .andExpect(jsonPath("$[0].microcycleNumber").value(2))
+                .andExpect(jsonPath("$[0].actualPerformance").value("100kg x5"))
+                .andExpect(jsonPath("$[0].notes").value("top set"));
+    }
+
+    @Test
+    void getExerciseHistory_parsesDateRangeParams() throws Exception {
+        when(exerciseService.getExerciseHistory(eq(1L), any(), any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/exercises/1/history")
+                        .param("from", "2026-01-01")
+                        .param("to", "2026-03-31"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<LocalDate> fromCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        ArgumentCaptor<LocalDate> toCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        verify(exerciseService).getExerciseHistory(eq(1L), fromCaptor.capture(), toCaptor.capture());
+        assertThat(fromCaptor.getValue()).isEqualTo(LocalDate.of(2026, 1, 1));
+        assertThat(toCaptor.getValue()).isEqualTo(LocalDate.of(2026, 3, 31));
+    }
+
+    @Test
+    void getExerciseHistory_returns404_whenExerciseMissing() throws Exception {
+        when(exerciseService.getExerciseHistory(eq(99L), any(), any()))
+                .thenThrow(new ResourceNotFoundException("Exercise", 99L));
+
+        mockMvc.perform(get("/api/v1/exercises/99/history"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 }
